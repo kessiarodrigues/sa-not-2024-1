@@ -1,3 +1,7 @@
+// Importa as variáveis de ambiente do arquivo .env
+import dotenv from 'dotenv'
+dotenv.config()
+
 import express, { json, urlencoded } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
