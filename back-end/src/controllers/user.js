@@ -43,6 +43,8 @@ controller.retrieveOne = async function (req, res) {
       where: { id: Number(req.params.id) },
     });
 
+    console.log({result})
+
     // Exclui o campo "password" do resultado
     if (result && result.password) delete result.password;
 
