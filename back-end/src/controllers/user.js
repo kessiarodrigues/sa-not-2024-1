@@ -115,14 +115,14 @@ controller.login = async function(req, res) {
 
     // Se o usuário não for encontrado ~>
     // HTTP 401: Unauthorized
-    if(! user) return res.send(401).end()
+    if(! user) return res.status(401).end()
 
     // Usuário encontrado, vamos conferir a senha
     const passwordMatches = await bcrypt.compare(req.body.password, user.password)
 
     // Se a senha estiver incorreta ~>
     // HTTP 401: Unauthorized
-    if(! passwordMatches) return res.send(401).end()
+    if(! passwordMatches) return res.status(401).end()
 
     // Se chegamos até aqui, username + password estão OK
     // Vamos criar o token e retorná-lo como resposta
