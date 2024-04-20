@@ -2,33 +2,6 @@ import prisma from '../database/client.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
-import sqlite3 from 'sqlite3'
-
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const basePath = __dirname.replaceAll('\\', '/').replace('/src/controllers', '')
-const dbPath = basePath + '/prisma/database/local.db'
-
-// Conectando ao banco de dados Sqlite
-const db = new sqlite3.Database('dbPath', error => {
-  if(error) {
-    console.error(`ERRO: NÃO FOI POSSÍVEL CONECTAR AO BANCO DE DADOS ${dbPath}`)
-  }
-  else {
-    console.log(`* Conectado com sucesso ao banco de dados ${dbPath}`)
-  }
-
-  
-})
-
-db.all("SELECT * FROM sqlite_schema;", [], (err, rows) => {
-  console.log(rows)
-})
-
 const controller = {}   // Objeto vazio
 
 controller.create = async function(req, res) {
@@ -133,15 +106,16 @@ controller.delete = async function(req, res) {
   }
 }
 
-controller.login = function(req, res) {
-  const query = `select * from usere where username = '${req.body.username}';`
-  console.log({query})
+controller.login = async function(req, res) {
+  try {
+    // Busca o usuário pelo username
+    const user = await prisma.user.findUnique({
+      where: { username: req.body.username.toLowerCase() }
+    })
 
-  db.get(query, [], async (error, user) => {
-    if(error) {
-      console.error(error)
-      return res.status(401).end()
-    }
+    // Se o usuário não for encontrado ~>
+    // HTTP 401: Unauthorized
+    if(! user) return res.status(401).end()
 
     // Usuário encontrado, vamos conferir a senha
     const passwordMatches = await bcrypt.compare(req.body.password, user.password)
@@ -166,7 +140,12 @@ controller.login = function(req, res) {
     // Retorna o token com status HTTP 200: OK (implícito)
     res.send({token})
 
-  })
+  }
+  catch(error) {
+    console.error(error)
+    // HTTP 500: Internal Server Error
+    res.status(500).send(error)
+  }
 }
 
 export default controller
