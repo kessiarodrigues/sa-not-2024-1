@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 import sqlite3 from 'sqlite3'
+import { open } from 'sqlite'
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,22 +13,6 @@ const __dirname = path.dirname(__filename);
 
 const basePath = __dirname.replaceAll('\\', '/').replace('/src/controllers', '')
 const dbPath = basePath + '/prisma/database/local.db'
-
-// Conectando ao banco de dados Sqlite
-const db = new sqlite3.Database('dbPath', error => {
-  if(error) {
-    console.error(`ERRO: NÃO FOI POSSÍVEL CONECTAR AO BANCO DE DADOS ${dbPath}`)
-  }
-  else {
-    console.log(`* Conectado com sucesso ao banco de dados ${dbPath}`)
-  }
-
-  
-})
-
-db.all("SELECT * FROM sqlite_schema;", [], (err, rows) => {
-  console.log(rows)
-})
 
 const controller = {}   // Objeto vazio
 
@@ -133,13 +118,22 @@ controller.delete = async function(req, res) {
   }
 }
 
-controller.login = function(req, res) {
-  const query = `select * from usere where username = '${req.body.username}';`
+controller.login = async function(req, res) {
+  const query = `select * from user where username = '${req.body.username}';`
   console.log({query})
 
-  db.get(query, [], async (error, user) => {
-    if(error) {
-      console.error(error)
+  try {
+    const db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database
+    })
+
+    const user = await db.get(query)
+
+    // Se o usuário não for encontrado ~>
+    // HTTP 401: Unauthorized
+    if(! user) {
+      console.error('ERRO: usuário não encontrado.')
       return res.status(401).end()
     }
 
@@ -148,7 +142,10 @@ controller.login = function(req, res) {
 
     // Se a senha estiver incorreta ~>
     // HTTP 401: Unauthorized
-    if(! passwordMatches) return res.status(401).end()
+    if(! passwordMatches) {
+      console.error('ERRO: senha inválida.')
+      return res.status(401).end()
+    }
 
     // Se chegamos até aqui, username + password estão OK
     // Vamos criar o token e retorná-lo como resposta
@@ -166,7 +163,12 @@ controller.login = function(req, res) {
     // Retorna o token com status HTTP 200: OK (implícito)
     res.send({token})
 
-  })
+  }
+  catch(error) {
+    console.error(error)
+    // HTTP 500: Internal Server Error
+    res.status(500).send(error)
+  }
 }
 
 export default controller
