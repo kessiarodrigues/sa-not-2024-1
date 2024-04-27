@@ -1,5 +1,7 @@
 import React from 'react'
 import myfetch from '../lib/myfetch'
+import './UserList.css'
+import { Link } from 'react-router-dom'
 
 export default function UserList() {
   const [users, setUsers] = React.useState([])
@@ -23,20 +25,22 @@ export default function UserList() {
     <>
       <h1>Listagem de usuários</h1>
 
-      <table style={{ border: '1px solid black', borderCollapse: 'collapse' }}>
-        <tr style={{ border: '1px solid black' }}>
+      <table>
+        <tr>
           <th>Cód.</th>
           <th>Nome completo</th>
           <th>Nome de usuário</th>
           <th>É admin?</th>
+          <th>Editar</th>
         </tr>
         {
           users.map(u => (
-            <tr style={{ border: '1px solid black' }}>
+            <tr>
               <td>{u.id}</td>
               <td>{u.fullname}</td>
               <td>{u.username}</td>
               <td>{u.is_admin ? 'Sim' : ''}</td>
+              <td><Link to={`./${u.id}`}>[Editar]</Link></td>
             </tr>
           ))
         }

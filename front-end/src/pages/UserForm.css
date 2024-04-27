@@ -1,0 +1,11 @@
+form div label span {
+  display: block;
+}
+
+form div {
+  margin-bottom: 20px;
+}
+
+form .edit-password {
+  display: none;
+}

@@ -2,13 +2,25 @@ import prisma from '../database/client.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
+import sqlite3 from 'sqlite3'
+import { open } from 'sqlite'
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const basePath = __dirname.replaceAll('\\', '/').replace('/src/controllers', '')
+const dbPath = basePath + '/prisma/database/local.db'
+
 const controller = {}   // Objeto vazio
 
 controller.create = async function(req, res) {
   try {
 
     // Criptografando a senha
-    req.body.password = await bcrypt.hash(req.body.password, 12)
+    req.body.password >= await bcrypt.hash(req.body.password, 12)
 
     await prisma.user.create({ data: req.body })
 
@@ -107,22 +119,43 @@ controller.delete = async function(req, res) {
 }
 
 controller.login = async function(req, res) {
+ 
+  // ATENÇÃO: a consulta abaixo pode facilitar um ataque de SQL Injection
+  //const query = `select * from user where username = '${req.body.username}';`
+
+  const query = `select * from user where username = ?;`
+
+  console.log({query})
+
   try {
-    // Busca o usuário pelo username
-    const user = await prisma.user.findUnique({
-      where: { username: req.body.username.toLowerCase() }
+    const db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database
     })
+
+    // SQL Injection
+    //const user = await db.get(query)
+
+    // Executando a consulta com parâmetro para prevenir SQL Injection
+    const user = await db.get(query, [req.body.username])
+    console.log(user)
 
     // Se o usuário não for encontrado ~>
     // HTTP 401: Unauthorized
-    if(! user) return res.status(401).end()
+    if(! user) {
+      console.error('ERRO: usuário não encontrado.')
+      return res.status(401).end()
+    }
 
     // Usuário encontrado, vamos conferir a senha
     const passwordMatches = await bcrypt.compare(req.body.password, user.password)
 
     // Se a senha estiver incorreta ~>
     // HTTP 401: Unauthorized
-    if(! passwordMatches) return res.status(401).end()
+    if(! passwordMatches) {
+      console.error('ERRO: senha inválida.')
+      return res.status(401).end()
+    }
 
     // Se chegamos até aqui, username + password estão OK
     // Vamos criar o token e retorná-lo como resposta
