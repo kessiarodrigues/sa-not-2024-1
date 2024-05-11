@@ -46,6 +46,9 @@ function getErrorDescription(response) {
     case 403:
       return 'ERRO: acesso não autorizado'
 
+    case 429:
+      return 'ERRO: excesso de tentativas'
+
     case 500:
       return 'ERRO: mau funcionamento do servidor remoto'
 
