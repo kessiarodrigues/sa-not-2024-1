@@ -10,6 +10,7 @@ router.get('/', controller.retrieveAll)
 router.get('/:id', controller.retrieveOne)
 router.put('/:id', controller.update)
 router.delete('/:id', controller.delete)
+router.post('/logout', controller.logout)
 
 // Número de logins será limitado pelo rateLimiter
 router.post('/login', rateLimiter, controller.login)

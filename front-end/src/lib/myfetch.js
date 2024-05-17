@@ -46,9 +46,6 @@ function getErrorDescription(response) {
     case 403:
       return 'ERRO: acesso não autorizado'
 
-    case 429:
-      return 'ERRO: excesso de tentativas'
-
     case 500:
       return 'ERRO: mau funcionamento do servidor remoto'
 
@@ -58,28 +55,32 @@ function getErrorDescription(response) {
   }
 }
 
+function processResponse(response) {
+  if(response.ok) {
+    const isJson = response.headers.get('content-type')?.includes('application/json')
+    if(isJson) return response.json()
+    else return true
+  } else throw new HttpError(response.status, getErrorDescription(response))
+}
+
 myfetch.post = async function(path, body) {
   const response = await fetch(baseUrl + path, getOptions(body, 'POST'))
-  if(response.ok) return response.json()
-  else throw new HttpError(response.status, getErrorDescription(response))
+  return processResponse(response)
 }
 
 myfetch.put = async function(path, body) {
   const response = await fetch(baseUrl + path, getOptions(body, 'PUT'))
-  if(response.ok) return response.json()
-  else throw new HttpError(response.status, getErrorDescription(response))
+  return processResponse(response)
 }
 
 myfetch.get = async function(path) {
   const response = await fetch(baseUrl + path, getOptions())
-  if(response.ok) return response.json()
-  else throw new HttpError(response.status, getErrorDescription(response))
+  return processResponse(response)
 }
 
 myfetch.delete = async function(path) {
   const response = await fetch(baseUrl + path, getOptions(null, 'DELETE'))
-  if(response.ok) return response.json()
-  else throw new HttpError(response.status, getErrorDescription(response))
+  return processResponse(response)
 }
 
 export default myfetch

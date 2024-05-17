@@ -262,8 +262,21 @@ controller.login = async function(req, res) {
       { expiresIn: '24h' }  // Prazo de validade do token
     )
 
+    // Formamos o cookie para enviar ao front-end
+    res.cookie(process.env.AUTH_COOKIE_NAME, token, {
+      httpOnly: true,   // O cookie ficará inacessível para JS
+      secure: true,
+      sameSite: 'Strict',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000   // 24h em milissegundos
+    })
+
     // Retorna o token com status HTTP 200: OK (implícito)
-    res.send({token})
+    //res.send({token})
+
+    // O token não é mais enviado na resposta
+    // A resposta agora é simplesmente HTTP 204: No Content
+    res.status(204).end()
 
   }
   catch(error) {
@@ -271,6 +284,12 @@ controller.login = async function(req, res) {
     // HTTP 500: Internal Server Error
     res.status(500).send(error)
   }
+}
+
+controller.logout = function(req, res) {
+  // Apaga o cookie que armazena o token de autorização
+  res.clearCookie(process.env.AUTH_COOKIE_NAME)
+  res.status(204).end()
 }
 
 controller.me = function(req, res) {

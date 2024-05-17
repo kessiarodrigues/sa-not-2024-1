@@ -28,14 +28,16 @@ export default function AppHeader() {
     })()
   }, [location])
 
-  function handleLogoutClick() {
+  async function handleLogoutClick() {
     if(confirm('Deseja realmente sair?')) {
-      // Tira da memória as informações sobre o usuário autenticado
-      setAuthUser(null)
-      // Exclui o token do localStorage
-      window.localStorage.removeItem(import.meta.env.VITE_AUTH_TOKEN_NAME)
-      // Redireciona para a página de login
-      navigate('/login')
+      try {
+        await myfetch.post('/users/logout')
+        navigate('/login')
+      }
+      catch(error) {
+        console.error(error)
+        alert('ERRO DO SERVIDOR: ' + error.message)
+      }
     }
   }
 
