@@ -96,20 +96,33 @@ controller.login = async function (req, res) {
       where: { username: req.body.username.toLowerCase() },
     });
 
-    if (!user) res.send(401).end();
-    const passwordMatches = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-    if (!passwordMatches) res.send(401).end();
-    if (user.password) delete user.password;
-    const token = jwt.sign(user, process.env.TOKEN_SECRET, {
-      expiresIn: '24h',
-    });
-    res.send(token);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(error);
+    // Se o usuário não for encontrado ~>
+    // HTTP 401: Unauthorized
+    if(! user) return res.status(401).end()
+
+    // Usuário encontrado, vamos conferir a senha
+    const passwordMatches = await bcrypt.compare(req.body.password, user.password)
+
+    // Se a senha estiver incorreta ~>
+    // HTTP 401: Unauthorized
+    if(! passwordMatches) return res.status(401).end()
+
+    // Se chegamos até aqui, username + password estão OK
+    // Vamos criar o token e retorná-lo como resposta
+
+    // O token inclui as informações do usuário. Vamos excluir o campo
+    // da senha antes de prosseguir
+    if(user.password) delete user.password
+
+    const token = jwt.sign(
+      user,
+      process.env.TOKEN_SECRET,   // Senha de criptografia do token
+      { expiresIn: '24h' }  // Prazo de validade do token
+    )
+
+    // Retorna o token com status HTTP 200: OK (implícito)
+    res.send({token})
+
   }
 };
 

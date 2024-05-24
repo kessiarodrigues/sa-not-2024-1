@@ -8,7 +8,8 @@ export default function(req, res, next) {
     são cadastradas no vetor bypassRoutes.
   */
   const bypassRoutes = [
-    { url: '/users/login', method: 'POST' }
+    { url: '/users/login', method: 'POST' },
+    { url: '/users', method: 'POST' }
   ]
 
   /*
