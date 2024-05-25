@@ -2,17 +2,19 @@ import React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import myfetch from '../lib/myfetch'
 import './UserForm.css'
-import User from '../models/User'
+import getUserModel from '../models/User'
 import { ZodError } from 'zod'
 
 export default function UserForm() {
   const [state, setState] = React.useState({
     user: {},
-    inputErrors: null
+    inputErrors: null,
+    changePassword: false
   })
   const {
     user,
-    inputErrors
+    inputErrors,
+    changePassword
   } = state
 
   const editPasswordRef = React.useRef()
@@ -44,9 +46,7 @@ export default function UserForm() {
     if(e.target.checked) editPasswordRef.current.style.display = 'block'
     else editPasswordRef.current.style.display = 'none'
 
-    const userCopy = { ...user }
-    userCopy.changePassword = e.target.checked
-    setState({ ...state, user: userCopy })
+    setState({ ...state, changePassword: e.target.checked })
   }
 
   function handleIsAdminClick(e) {
@@ -59,7 +59,11 @@ export default function UserForm() {
     event.preventDefault()    // Impede o recarregamento da página
     try {
       // Invoca a validação do Zod por meio do model User
+      const User = getUserModel(changePassword)
       User.parse(user)
+
+      // Exclui o campo password2
+      if('password2' in user) delete user.password2
 
       // Se a rota tiver o parâmetro id, significa que estamos editando
       // um usuário
