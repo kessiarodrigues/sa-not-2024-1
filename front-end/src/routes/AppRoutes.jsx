@@ -31,6 +31,7 @@ export default function AppRoutes() {
     <Route path="/" element={ <HomePage /> } />
     <Route path="/login" element={ <LoginPage /> } />
     <Route path="/users" element={ guardedUserList } />
+    <Route path="/users/new" element={ guardedUserForm } />
     <Route path="/users/:id" element={ guardedUserForm } />
     <Route path="/brute-force" element={ guardedBruteForce } /> 
   </Routes>
